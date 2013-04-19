@@ -8,6 +8,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -16,7 +20,6 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.widget.TextView;
 
 public class DownloadStringActivity extends Activity {
@@ -36,7 +39,7 @@ public class DownloadStringActivity extends Activity {
     // Before attempting to fetch the URL, makes sure that there is a network connection.
     private void downloadAndDisplayString() {
         // Gets the URL from the UI's text field.
-        String stringUrl = "http://www.google.com";
+        String stringUrl = "http://192.168.0.190/api/pipelines?format=json";
         ConnectivityManager connMgr = (ConnectivityManager) 
             getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -59,14 +62,31 @@ public class DownloadStringActivity extends Activity {
            try {
                return downloadUrl(urls[0]);
            } catch (IOException e) {
-               return "Unable to retrieve web page. URL may be invalid.";
+               return "Unable to retrieve web page. URL may be invalid. " + e.toString();
            }
        }
        
        // onPostExecute displays the results of the AsyncTask.
        @Override
        protected void onPostExecute(String result) {
-           textView.setText(result);
+    	   try {
+    		   String revisions = "";
+    		   JSONArray pipelines = new JSONArray(result);
+    		   for(int i=0; i<pipelines.length(); i++)
+    		   {
+    		        JSONObject pipeline = pipelines.getJSONObject(i);
+    		        String projectName = pipeline.getString("projectName");
+    		        String branchName = pipeline.getString("branchName");
+    		        String revision = pipeline.getString("revision");
+    		        revisions += projectName + "/" + branchName + " (" + revision.substring(0, 10) + ") ";
+    		   }
+    		   textView.setText(revisions);
+		   } catch (JSONException e) {
+			   e.printStackTrace();
+			   String message = "Unable to parse JSON. Exception: " + e.toString() +
+					   " JSON: " + result;
+			   textView.setText(message);
+		   }
        }
        
        // Given a URL, establishes an HttpUrlConnection and retrieves
@@ -74,9 +94,8 @@ public class DownloadStringActivity extends Activity {
        // a string.
        private String downloadUrl(String myurl) throws IOException {
     	   InputStream is = null;
-    	   // Only display the first 500 characters of the retrieved
-    	   // web page content.
-    	   int len = 500;
+    	   // TODO: Dynamically handle buffer size
+    	   int len = 50000;
             
     	   try {
                URL url = new URL(myurl);
