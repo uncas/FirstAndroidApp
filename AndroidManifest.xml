@@ -7,7 +7,11 @@
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="17" />
-
+	<uses-permission 
+	    android:name="android.permission.INTERNET" />
+	<uses-permission 
+	    android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
     <application
         android:allowBackup="true"
         android:debuggable="true"
@@ -30,6 +34,10 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="dk.uncas.firstandroidapp.MainActivity" />
+        </activity>
+        <activity
+            android:name="dk.uncas.firstandroidapp.DownloadStringActivity"
+            android:label="@string/title_activity_download_string" >
         </activity>
     </application>
 
